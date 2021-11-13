@@ -1,0 +1,14 @@
+{
+  "name": "fish-in-a-barrel",
+  "version": "1.0.0",
+  "description": "```bash npm init ```",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "xstate": "^4.26.0"
+  }
+}
