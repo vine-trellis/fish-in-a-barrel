@@ -10,5 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "xstate": "^4.26.0"
+  },
+  "devDependencies": {
+    "prettier": "2.4.1"
   }
 }
