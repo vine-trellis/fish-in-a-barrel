@@ -3,6 +3,12 @@ import { createModel } from "xstate/lib/model.js";
 
 const { respond } = actions;
 
+const broadcastService = (listeners) => (callback, onReceive) => {
+  onReceive((e) => {
+    listeners.forEach((l) => send({ type: e.type }, { to: l }));
+  });
+};
+
 const sunMachine = createMachine({
   id: "sun",
   context: {
@@ -11,19 +17,22 @@ const sunMachine = createMachine({
   initial: "hiding",
   states: {
     shining: {
-      entry: (ctx) =>
-        ctx.sunbathers.map((sb) =>
-          send({ type: "BROADCAST", message: { type: "SUNRISE" } }, { to: sb })
-        ),
-      after: { 3000: "hiding" },
+      entry: (ctx) => {
+        ctx.sunbathers.forEach((l) =>
+          l.send({ type: "BROADCAST", message: { type: "SUNRISE" } })
+        );
+      },
+
+      after: { 300: "hiding" },
       on: { SET: "hiding" },
     },
     hiding: {
-      entry: (ctx) =>
-        ctx.sunbathers.map((sb) =>
-          send({ type: "BROADCAST", message: { type: "SUNSET" } }, { to: sb })
-        ),
-      after: { 3000: "shining" },
+      entry: (ctx) => {
+        ctx.sunbathers.forEach((l) =>
+          l.send({ type: "BROADCAST", message: { type: "SUNSET" } })
+        );
+      },
+      after: { 300: "shining" },
       on: { RISE: "shining" },
     },
   },
@@ -49,8 +58,6 @@ const aquariumModel = createModel(
   }
 );
 
-const foodDecider = () => (Math.random() > 0.5 ? "YES_FOOD" : "NO_FOOD");
-
 const aquariumMachine = aquariumModel.createMachine({
   id: "aquarium",
   context: aquariumModel.initialContext,
@@ -62,7 +69,7 @@ const aquariumMachine = aquariumModel.createMachine({
     },
     BROADCAST: {
       actions: (ctx, evt) =>
-        ctx.inhabitants.map((i) => send({ type: evt.message.type }, { to: i })),
+        ctx.inhabitants.map((i) => i.send({ ...evt.message })),
     },
     CHECK_FOR_FOOD: [
       {
@@ -84,16 +91,8 @@ const snailModel = createModel(
 const snailMachine = snailModel.createMachine({
   id: "snail",
   context: snailModel.initialContext,
-  initial: "init",
+  initial: "checkingForFood",
   states: {
-    init: {
-      on: {
-        SET_AQUARIUM: {
-          target: "checkingForFood",
-          actions: assign({ aquarium: (_ctx, evt) => spawn(evt.aquarium) }),
-        },
-      },
-    },
     checkingForFood: {
       entry: send({ type: "CHECK_FOR_FOOD" }, { to: (ctx) => ctx.aquarium }),
       on: {
@@ -101,7 +100,7 @@ const snailMachine = snailModel.createMachine({
         YES_FOOD: "eating",
       },
     },
-    eating: { after: { 1000: "checkingForFood" } },
+    eating: { after: { 100: "checkingForFood" } },
     moving: { after: { 100: "checkingForFood" } },
   },
 });
@@ -140,7 +139,7 @@ const duckweedMachine = createMachine({
     dormant: {
       on: {
         SUNRISE: [
-          { target: "replicating", cond: (ctx) => ctx.daysOfSun > 2 },
+          { target: "replicating", cond: (ctx) => ctx.daysOfSun > 5 },
           { target: "growing" },
         ],
       },
@@ -156,9 +155,31 @@ const duckweedMachine = createMachine({
     replicating: {
       on: {
         SUNSET: {
-          actions: [assign({ daysOfSun: () => 0 })],
-          target: "dormant",
+          actions: [
+            assign({ daysOfSun: () => 0 }),
+            (ctx) => {
+              return ctx.aquarium.send({
+                type: "ADD_INHABITANT",
+                inhabitant: interpret(
+                  duckweedMachine.withContext({
+                    daysOfSun: 0,
+                    aquarium: ctx.aquarium,
+                  })
+                )
+                  .onTransition((state) =>
+                    console.log(
+                      state.machine.id,
+                      state.value,
+                      state.context.daysOfSun,
+                      state.event.type
+                    )
+                  )
+                  .start(),
+              });
+            },
+          ],
         },
+        target: "dormant",
       },
     },
   },
@@ -167,6 +188,7 @@ const duckweedMachine = createMachine({
 const fishMachine = createMachine({
   id: "fish",
   initial: "sleeping",
+  meta: { name: "fish" },
   states: {
     sleeping: {
       on: { TAP_GLASS: "swimming", SUNRISE: "swimming" },
@@ -183,9 +205,15 @@ function runAquarium() {
     )
     .start();
   const aquarium = interpret(aquariumMachine)
-    .onTransition((state) => console.log(state.machine.id, state.event.type))
+    .onTransition((state) =>
+      console.log(
+        state.machine.id,
+        state.event.type,
+        state.context.inhabitants.map((i) => i.machine.id)
+      )
+    )
     .start();
-  const snail = interpret(snailMachine)
+  const snail = interpret(snailMachine.withContext({aquarium}))
     .onTransition((state) =>
       console.log(state.machine.id, state.value, state.event.type)
     )
@@ -195,9 +223,16 @@ function runAquarium() {
       console.log(state.machine.id, state.value, state.event.type)
     )
     .start();
-  const duckweed = interpret(duckweedMachine)
+  const duckweed = interpret(
+    duckweedMachine.withContext({ daysOfSun: 0, aquarium })
+  )
     .onTransition((state) =>
-      console.log(state.machine.id, state.value, state.event.type)
+      console.log(
+        state.machine.id,
+        state.value,
+        state.context.daysOfSun,
+        state.event.type
+      )
     )
     .start();
   const fish = interpret(fishMachine)
@@ -208,12 +243,11 @@ function runAquarium() {
 
   sun.send({ type: "ADD_SUNBATHER", sunbather: aquarium });
   console.log(sun.state.context);
-  //aquarium.send({ type: "ADD_INHABITANT", inhabitant: snail });
+  aquarium.send({ type: "ADD_INHABITANT", inhabitant: snail });
   aquarium.send({ type: "ADD_INHABITANT", inhabitant: shrimp });
   aquarium.send({ type: "ADD_INHABITANT", inhabitant: duckweed });
   aquarium.send({ type: "ADD_INHABITANT", inhabitant: fish });
   sun.send({ type: "RISE" });
-  //snail.send({ type: "SET_AQUARIUM", aquarium });
 }
 
 runAquarium();
