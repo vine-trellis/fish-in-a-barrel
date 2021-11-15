@@ -1,5 +1,6 @@
 {
   "name": "fish-in-a-barrel",
+  "type": "module",
   "version": "1.0.0",
   "description": "```bash npm init ```",
   "main": "index.js",
