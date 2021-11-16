@@ -15,6 +15,7 @@
 -> # About me <-
 
 name            Daniel Lee
+email           daniel@techintern.io
 degree          Systems Design Engineering, BASc
 job             CTO, Co-founder @ Techintern.io    
 languages       [English, Python, Javascript]
@@ -124,23 +125,23 @@ Then, a code example of how the Aquarium could be implemented.
 -> ## Diagram of Aquarium System <-
 
 ```
-                                ┌──────┐
-                             ┌─►│ Fish │
-                             │  └──────┘
-                             │
-┌─────┐                      │  ┌────────┐
-│ Sun ├────┐                 ├─►│ Shrimp │
-└─────┘    │  ┌──────────┐   │  └────────┘
-           ├─►│ Aquarium ├───┤        
-┌───────┐  │  └──────────┘   │  ┌───────┐
-│ Hand  ├──┘        ▲        ├─►│ Snail ├────┐
-└───────┘           │        │  └───────┘    │
-                    │        │               │
-                    │        │  ┌──────────┐ │
-                    │        └─►│ Duckweed ├─┤
-                    │           └──────────┘ │
-                    │                        │
-                    └────────────────────────┘
+                                            ┌──────┐
+                                         ┌─►│ Fish │
+                                         │  └──────┘
+                                         │
+            ┌─────┐                      │  ┌────────┐
+            │ Sun ├────┐                 ├─►│ Shrimp │
+            └─────┘    │  ┌──────────┐   │  └────────┘
+                       ├─►│ Aquarium ├───┤        
+            ┌───────┐  │  └──────────┘   │  ┌───────┐
+            │ Hand  ├──┘        ▲        ├─►│ Snail ├────┐
+            └───────┘           │        │  └───────┘    │
+                                │        │               │
+                                │        │  ┌──────────┐ │
+                                │        └─►│ Duckweed ├─┤
+                                │           └──────────┘ │
+                                │                        │
+                                └────────────────────────┘
 
 ```
 
@@ -213,7 +214,11 @@ For instance, a web server exposing an API may be laid out as follows:
 ```
 ---
 
+-> Looking for an internship? <-
+-> *www.techintern.io* <-
 
+
+-> We also have full-time opportunities <-
 
 ---
 
