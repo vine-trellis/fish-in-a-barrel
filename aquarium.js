@@ -81,6 +81,27 @@ const aquariumMachine = aquariumModel.createMachine({
   },
 });
 
+const handMachine = createMachine({
+  id: "hand",
+  context: { aquarium: null },
+  initial: "idle",
+  states: {
+    idle: {
+      after: {
+        200: "feedingFish",
+      },
+    },
+    feedingFish: {
+      entry: (ctx) =>
+        ctx.aquarium.send({
+          type: "BROADCAST",
+          message: { type: "FEEDING_TIME" },
+        }),
+      always: "idle",
+    },
+  },
+});
+
 const snailModel = createModel(
   {
     aquarium: null,
@@ -198,11 +219,15 @@ const fishMachine = createMachine({
   },
 });
 
+const stateLogger = (state) => {
+  if (state.changed) {
+    console.log(state.machine.id, state.value, state.event.type)
+  }
+}
+
 function runAquarium() {
   const sun = interpret(sunMachine)
-    .onTransition((state) =>
-      console.log(state.machine.id, state.value, state.event.type)
-    )
+    .onTransition((state) => stateLogger(state))
     .start();
   const aquarium = interpret(aquariumMachine)
     .onTransition((state) =>
@@ -213,7 +238,12 @@ function runAquarium() {
       )
     )
     .start();
-  const snail = interpret(snailMachine.withContext({aquarium}))
+  const hand = interpret(handMachine.withContext({ aquarium }))
+    .onTransition((state) =>
+      console.log(state.machine.id, state.value, state.event.type)
+    )
+    .start();
+  const snail = interpret(snailMachine.withContext({ aquarium }))
     .onTransition((state) =>
       console.log(state.machine.id, state.value, state.event.type)
     )
@@ -242,7 +272,6 @@ function runAquarium() {
     .start();
 
   sun.send({ type: "ADD_SUNBATHER", sunbather: aquarium });
-  console.log(sun.state.context);
   aquarium.send({ type: "ADD_INHABITANT", inhabitant: snail });
   aquarium.send({ type: "ADD_INHABITANT", inhabitant: shrimp });
   aquarium.send({ type: "ADD_INHABITANT", inhabitant: duckweed });
