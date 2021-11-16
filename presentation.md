@@ -12,6 +12,21 @@
 
 ---
 
+-> # About me <-
+
+name            Daniel Lee
+degree          Systems Design Engineering, BASc
+job             CTO, Co-founder @ Techintern.io    
+languages       [English, Python, Javascript]
+fun fact        Went on exchange to Japan in University
+
+fav font        Cozette
+fav food        Pizza
+fav cat         Cleo
+fav fish        Nurse Shark
+
+---
+
 -> # The Aquarium Domain <-
 
 Aquariums are glass boxes full of aquatic organisms.
@@ -97,6 +112,37 @@ An actor is a unit that can do the following actions concurrently:
 ---
 
 # Aquarium Modelled with Actors
+
+Fortunately, for this presentation, FSMs and the Actor model
+work well together.
+
+Next, a diagram of how the Aquarium could be modelled with Actors.
+Then, a code example of how the Aquarium could be implemented.
+
+---
+
+-> ## Diagram of Aquarium System <-
+
+```
+                                ┌──────┐
+                             ┌─►│ Fish │
+                             │  └──────┘
+                             │
+┌─────┐                      │  ┌────────┐
+│ Sun ├────┐                 ├─►│ Shrimp │
+└─────┘    │  ┌──────────┐   │  └────────┘
+           ├─►│ Aquarium ├───┤        
+┌───────┐  │  └──────────┘   │  ┌───────┐
+│ Hand  ├──┘        ▲        ├─►│ Snail ├────┐
+└───────┘           │        │  └───────┘    │
+                    │        │               │
+                    │        │  ┌──────────┐ │
+                    │        └─►│ Duckweed ├─┤
+                    │           └──────────┘ │
+                    │                        │
+                    └────────────────────────┘
+
+```
 
 ---
 
