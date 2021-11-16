@@ -148,8 +148,75 @@ Then, a code example of how the Aquarium could be implemented.
 
 ## Event-driven architecture
 
+The actors in the Aquarium pass messages to one another,
+and process messages as the primary means of work.
+
+This event emitting and receiving pattern helps keep code organized,
+and most importantly *easy to reason about*.
+
+
 ---
+
 ## A quick aside about messages
+
+An example of event driven architecture is the *message queue* or *message broker*.
+
+Message queues come in many flavours, 
+but typically they are *internal* or *external*.
+
+*Internal* message queues could be event buses that manage the behaviour of
+a single service.
+
+*External* messages queues are typically used to transport messages between
+different services.
+
 ---
+
 # Applications in other domains
+
+Though today we talked about an Aquarium, and a few other concepts:
+
+- Finite State Machines
+- Actor Model
+- Event-driven Architecture
+
+Although it's unlikely your future work will involve fish,
+the above concepts lend themselves readily to many other domains and projects.
+
+Even if the popular frameworks and languages change, 
+being *reliable*, *explainable*, and *flexible* will never go stale!
+
+
+---
+
+-> ## Flask web server <-
+For instance, a web server exposing an API may be laid out as follows:
+```
+
+
+                                   ┌──────────────┐
+                                   │              │
+                                   │ ┌──────────┐ │
+    ┌───────┐                      │ │ Handler0 │ │
+    │ Flask ├──┐                   │ └──────────┘ │     ┌──────────┐
+    └───────┘  │  ┌────────────┐   │      .       ├────►│          │
+               ├─►│ MessageBus ├──►│      .       │     │ Postgres │
+    ┌───────┐  │  └────────────┘   │      .       │◄────┤          │
+    │ Redis ├──┘                   │ ┌──────────┐ │     └──────────┘
+    └───────┘                      │ │ HandlerN │ │
+        ▲                          │ └──────────┘ │
+        │                          │              │
+        │                          └───────┬──────┘
+        │                                  │
+        └──────────────────────────────────┘
+
+```
+---
+
+
+
+---
+
+-> Thank you <-
+
 
