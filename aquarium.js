@@ -2,12 +2,6 @@ import { assign, spawn, send, interpret, actions, createMachine } from "xstate";
 import keypress from "keypress";
 import chalk from "chalk";
 
-const EVENT = chalk.bold.blue;
-const OLD_STATE = chalk.cyan;
-const NEW_STATE = chalk.bold.cyanBright;
-const ACTOR = chalk.bold.green;
-const SEND_EVENT = chalk.bold.yellow;
-
 keypress(process.stdin);
 
 const { respond } = actions;
@@ -198,24 +192,14 @@ const fishMachine = createMachine({
 
 const stateLogger = (state) => {
   if (state.changed) {
-    console.log(
-      ACTOR(state.machine.id),
-      ":",
-      OLD_STATE(state.history.value),
-      "+",
-      EVENT(state.event.type),
-      "=",
-      NEW_STATE(state.value)
+    console.log(chalk`{bold.green ${state.machine.id}}: {cyan ${state.history.value}} + {bold.blue ${state.event.type}} = {bold.cyanBright ${state.value}}`
     );
   }
 };
 
 const eventLogger = (actor, event) => {
   console.log(
-    SEND_EVENT("Sending Event:"),
-    EVENT(event),
-    SEND_EVENT("->"),
-    ACTOR(actor)
+    chalk`{bold.yellow Sending event}: {bold.blue ${event}} -> {bold.green ${actor}}`
   );
 };
 
@@ -253,7 +237,7 @@ function runAquarium() {
   // listen for keys
   process.stdin.on("keypress", function (ch, key) {
     if ((key && key.name == "q") || (key && key.ctrl && key.name == "c")) {
-      console.log(chalk.bold.red("Exiting program"));
+      console.log(chalk`{bold.red Exiting program}`);
       process.exit();
     }
     if (key && key.name == "r") {
@@ -273,10 +257,7 @@ function runAquarium() {
       snail.send({ type: "SNAIL_CHECK" });
     }
     if (key && key.name == "a") {
-      console.log(
-        ACTOR("aquarium inhabitants"),
-        ":",
-        aquarium.state.context.inhabitants.map((i) => i.machine.id)
+      console.log(chalk`{bold.green aquarium inhabitants}: ${aquarium.state.context.inhabitants.map((i) => i.machine.id)}`
       );
     }
   });
