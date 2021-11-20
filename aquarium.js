@@ -1,4 +1,14 @@
 import { assign, spawn, send, interpret, actions, createMachine } from "xstate";
+import keypress from "keypress";
+import chalk from "chalk";
+
+const EVENT = chalk.bold.blue;
+const OLD_STATE = chalk.cyan;
+const NEW_STATE = chalk.bold.cyanBright;
+const ACTOR = chalk.bold.green;
+const SEND_EVENT = chalk.bold.yellow;
+
+keypress(process.stdin);
 
 const { respond } = actions;
 
@@ -15,8 +25,6 @@ const sunMachine = createMachine({
           l.send({ type: "BROADCAST", message: { type: "SUNRISE" } })
         );
       },
-
-      after: { 300: "hiding" },
       on: { SET: "hiding" },
     },
     hiding: {
@@ -25,7 +33,6 @@ const sunMachine = createMachine({
           l.send({ type: "BROADCAST", message: { type: "SUNSET" } })
         );
       },
-      after: { 300: "shining" },
       on: { RISE: "shining" },
     },
   },
@@ -67,8 +74,8 @@ const handMachine = createMachine({
   initial: "idle",
   states: {
     idle: {
-      after: {
-        200: "feedingFish",
+      on: {
+        FEED_FISH: "feedingFish",
       },
     },
     feedingFish: {
@@ -94,8 +101,12 @@ const snailMachine = createMachine({
         YES_FOOD: "eating",
       },
     },
-    eating: { after: { 100: "checkingForFood" } },
-    moving: { after: { 100: "checkingForFood" } },
+    eating: {
+      on: { SNAIL_CHECK: "checkingForFood" },
+    },
+    moving: {
+      on: { SNAIL_CHECK: "checkingForFood" },
+    },
   },
 });
 
@@ -160,14 +171,7 @@ const duckweedMachine = createMachine({
                     aquarium: ctx.aquarium,
                   })
                 )
-                  .onTransition((state) =>
-                    console.log(
-                      state.machine.id,
-                      state.value,
-                      state.context.daysOfSun,
-                      state.event.type
-                    )
-                  )
+                  .onTransition((state) => stateLogger(state))
                   .start(),
               });
             },
@@ -194,8 +198,25 @@ const fishMachine = createMachine({
 
 const stateLogger = (state) => {
   if (state.changed) {
-    console.log(state.machine.id, state.value, state.event.type);
+    console.log(
+      ACTOR(state.machine.id),
+      ":",
+      OLD_STATE(state.history.value),
+      "+",
+      EVENT(state.event.type),
+      "=",
+      NEW_STATE(state.value)
+    );
   }
+};
+
+const eventLogger = (actor, event) => {
+  console.log(
+    SEND_EVENT("Sending Event:"),
+    EVENT(event),
+    SEND_EVENT("->"),
+    ACTOR(actor)
+  );
 };
 
 function runAquarium() {
@@ -203,13 +224,6 @@ function runAquarium() {
     .onTransition((state) => stateLogger(state))
     .start();
   const aquarium = interpret(aquariumMachine)
-    .onTransition((state) =>
-      console.log(
-        state.machine.id,
-        state.event.type,
-        state.context.inhabitants.map((i) => i.machine.id)
-      )
-    )
     .start();
   const hand = interpret(handMachine.withContext({ aquarium }))
     .onTransition((state) => stateLogger(state))
@@ -229,12 +243,45 @@ function runAquarium() {
     .onTransition((state) => stateLogger(state))
     .start();
 
+  // initialize our machines
   sun.send({ type: "ADD_SUNBATHER", sunbather: aquarium });
   aquarium.send({ type: "ADD_INHABITANT", inhabitant: snail });
   aquarium.send({ type: "ADD_INHABITANT", inhabitant: shrimp });
   aquarium.send({ type: "ADD_INHABITANT", inhabitant: duckweed });
   aquarium.send({ type: "ADD_INHABITANT", inhabitant: fish });
-  sun.send({ type: "RISE" });
+
+  // listen for keys
+  process.stdin.on("keypress", function (ch, key) {
+    if ((key && key.name == "q") || (key && key.ctrl && key.name == "c")) {
+      console.log(chalk.bold.red("Exiting program"));
+      process.exit();
+    }
+    if (key && key.name == "r") {
+      eventLogger("sun", "RISE");
+      sun.send({ type: "RISE" });
+    }
+    if (key && key.name == "s") {
+      eventLogger("sun", "SET");
+      sun.send({ type: "SET" });
+    }
+    if (key && key.name == "f") {
+      eventLogger("hand", "FEED_FISH");
+      hand.send({ type: "FEED_FISH" });
+    }
+    if (key && key.name == "c") {
+      eventLogger("snail", "SNAIL_CHECK");
+      snail.send({ type: "SNAIL_CHECK" });
+    }
+    if (key && key.name == "a") {
+      console.log(
+        ACTOR("aquarium inhabitants"),
+        ":",
+        aquarium.state.context.inhabitants.map((i) => i.machine.id)
+      );
+    }
+  });
+  process.stdin.setRawMode(true);
+  process.stdin.resume();
 }
 
 runAquarium();

@@ -28,6 +28,13 @@ fav fish        Nurse Shark
 
 ---
 
+-> # Why does this presentation matter? <-
+
+- The difference between *software development* and *Software Engineering*
+- Thinking about the world as a composition of systems
+- Defining bounded domains for a problem space
+
+---
 -> # The Aquarium Domain <-
 
 Aquariums are glass boxes full of aquatic organisms.
@@ -187,7 +194,6 @@ the above concepts lend themselves readily to many other domains and projects.
 Even if the popular frameworks and languages change, 
 being *reliable*, *explainable*, and *flexible* will never go stale!
 
-
 ---
 
 -> ## Flask web server <-
@@ -212,6 +218,20 @@ For instance, a web server exposing an API may be laid out as follows:
         └──────────────────────────────────┘
 
 ```
+---
+
+-> ## Other applications <-
+
+Literal Machines:
+- Washing machine
+- Thermostat
+- Traffic lights
+
+Abstract Machines:
+- UI components (forms, modals, buttons)
+- XHR/Fetch requests (promises)
+- Databases
+
 ---
 
 -> Looking for an internship? <-
